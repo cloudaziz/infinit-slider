@@ -6,20 +6,28 @@ let showItem = parseInt(
 );
 
 let itemsPerSlide = parseInt(
-  window.getComputedStyle(sliderWrapper).getPropertyValue('--item-slide'),
+  window.getComputedStyle(sliderWrapper).getPropertyValue('--slide-item'),
   10
 );
 
-const slider = sliderWrapper.querySelector('.slider'); //  slide
-let sliderItems = slider.querySelectorAll('li'); // slider item
-let sliderItemWidth = sliderItems[0].offsetWidth; // single Item width
+if (showItem < itemsPerSlide) {
+  itemsPerSlide = showItem;
+}
 
-let movableItemWidth = sliderItemWidth * itemsPerSlide;
+const slider = sliderWrapper.querySelector('.slider'); //  slide
+const sliderItems = slider.querySelectorAll('li'); // slider item
+const sliderItemWidth = sliderItems[0].offsetWidth; // single Item width
+const totalItems = sliderItems.length;
+const lastItemsIndex = sliderItems.length - 1;
 
 const nextBtn = document.querySelector('.right');
 const prevBtn = document.querySelector('.left');
 
-let currentIndex = 1;
+let currentIndex = 0;
+
+function setIndex(index) {
+  sliderWrapper.style.setProperty('--slide-index', currentIndex);
+}
 
 for (let index = 0; index < showItem; index++) {
   const firstClone = sliderItems[index].cloneNode(true);
@@ -28,151 +36,121 @@ for (let index = 0; index < showItem; index++) {
   slider.append(firstClone);
 }
 
-for (let index = 1; index <= showItem; index++) {
-  const lastClone = sliderItems[sliderItems.length - index].cloneNode(true);
+for (let index = 0; index < showItem; index++) {
+  const lastClone = sliderItems[lastItemsIndex - index].cloneNode(true);
   lastClone.classList.add('clone');
   lastClone.classList.remove('active');
   slider.prepend(lastClone);
 }
 
-/*
-const firstClone1 = sliderItems[0].cloneNode(true);
-const firstClone2 = sliderItems[1].cloneNode(true);
+const sliderItemsWithCloned = slider.querySelectorAll('li');
 
-const lastClone1 = sliderItems[sliderItems.length - 1].cloneNode(true);
-const lastClone2 = sliderItems[sliderItems.length - 2].cloneNode(true);
-
-firstClone1.classList.add('clone');
-firstClone2.classList.add('clone');
-
-firstClone1.classList.remove('active');
-firstClone2.classList.remove('active');
-
-lastClone1.classList.add('clone');
-lastClone2.classList.add('clone');
-
-lastClone1.classList.remove('active');
-lastClone2.classList.remove('active');
-
-slider.append(firstClone1);
-slider.prepend(lastClone1);
-*/
-sliderItems = slider.querySelectorAll('li');
-
-sliderItems.forEach((item, indx) => {
+sliderItemsWithCloned.forEach((item, indx) => {
   if (item.classList.contains('active')) {
     currentIndex = indx;
-    slider.style.transform = `translateX(-${sliderItemWidth * currentIndex}px)`;
+    setIndex(currentIndex);
+    slider.style.transform = `translateX(-${sliderItemWidth * indx}px)`;
   }
 });
+
+sliderItemsWithCloned[currentIndex].classList.add('current');
+for (let i = 0; i < showItem; i++) {
+  const x = i + currentIndex;
+
+  sliderItemsWithCloned[x].classList.add('active');
+}
 
 // Prev
 prevBtn.addEventListener('click', (event) => {
   event.preventDefault();
-  console.log('btn', currentIndex);
-  //if (currentIndex === 3) return;
-  currentIndex -= itemsPerSlide;
+
+  if (slider.classList.contains('animating')) {
+    return;
+  }
+
+  const remaining = currentIndex - itemsPerSlide;
+  let s = itemsPerSlide < remaining ? itemsPerSlide : remaining;
+
+  if (remaining === 0) {
+    s = itemsPerSlide;
+  }
+
+  currentIndex -= s;
+  setIndex(currentIndex);
 
   slider.classList.add('animating');
   slider.style.transform = `translateX(-${sliderItemWidth * currentIndex}px)`;
-  // slider.style.transition = '.7s';
 });
 
 // Next
 nextBtn.addEventListener('click', (event) => {
   event.preventDefault();
-  // if (currentIndex === sliderItems.length - itemsPerSlide) return; //
-  // sliderItems.forEach((item) => item.classList.remove('active'));
-  currentIndex += itemsPerSlide;
+
+  if (slider.classList.contains('animating')) {
+    return;
+  }
+  const next1 = currentIndex + itemsPerSlide; // 3 + 3 = 6
+  const remaining = totalItems - (next1 - itemsPerSlide); // 7 - 6 = 1
+
+  let s = itemsPerSlide < remaining ? itemsPerSlide : remaining;
+
+  if (remaining === 0) {
+    s = itemsPerSlide;
+  }
+
+  currentIndex += s;
+  setIndex(currentIndex);
 
   slider.classList.add('animating');
   slider.style.transform = `translateX(-${sliderItemWidth * currentIndex}px)`;
-  // slider.style.transition = '.7s';
-  // sliderItems[currentIndex].classList.add('active');
 });
 
+// before slide
 slider.addEventListener('transitionstart', (event) => {
-  sliderItems.forEach((item) => {
+  sliderItemsWithCloned.forEach((item) => {
     item.classList.remove('active');
   });
 });
 
+// after slide
 slider.addEventListener('transitionend', (event) => {
   slider.classList.remove('animating');
 
-  // next...
+  // fix prev
 
-  const visibleStartIndex = currentIndex;
-  const visibleStartEnd = visibleStartIndex + itemsPerSlide;
-  const possibleNextIndex = visibleStartEnd + itemsPerSlide;
-  const totalItems = sliderItems.length;
+  if (currentIndex === 0) {
+    currentIndex = sliderItems.length;
+    setIndex(currentIndex);
+    slider.style.transform = `translateX(-${sliderItemWidth * currentIndex}px)`;
+    return;
+  }
 
-  console.log('start index', visibleStartIndex, 'last index', visibleStartEnd);
-  console.log('maybe', possibleNextIndex, 'total item', totalItems);
-
-  return;
-
-  if (currentIndex >= sliderItems.length - itemsPerSlide * 2) {
-    //
-    currentIndex = itemsPerSlide;
-    // slider.style.transition = 'none';
+  // fix next
+  if (currentIndex > sliderItems.length) {
+    currentIndex = currentIndex - sliderItems.length;
+    setIndex(currentIndex);
     slider.style.transform = `translateX(-${sliderItemWidth * currentIndex}px)`;
   }
 
-  console.log('end', currentIndex);
+  for (let i = 0; i < showItem; i++) {
+    const x = i + currentIndex;
 
-  // prev...
-  if (currentIndex === 0) {
-    currentIndex = sliderItems.length - 2 * itemsPerSlide;
-    // slider.style.transition = 'none';
-    slider.style.transform = `translateX(-${sliderItemWidth * currentIndex}px)`;
-  }
-
-  sliderItems.forEach((item, indx) => {
-    if (indx === currentIndex) {
-      item.classList.add('active');
-    }
-  });
-});
-
-/*
-prevBtn.addEventListener('click', (event) => {
-  event.preventDefault();
-
-  sliderItems = slider.querySelectorAll('li');
-  if (currentIndex === 0) return;
-  currentIndex--;
-  slider.style.transform = `translateX(${
-    -sliderItemWidth * currentIndex * showItem
-  }px)`;
-  slider.style.transition = '.7s';
-});
-
-nextBtn.addEventListener('click', (event) => {
-  event.preventDefault();
-
-  sliderItems = slider.querySelectorAll('li');
-  if (currentIndex === sliderItems.length - 1) return;
-  currentIndex++;
-
-  console.log(currentIndex);
-  slider.style.transform = `translateX(${
-    -sliderItemWidth * currentIndex * showItem
-  }px)`;
-  slider.style.transition = '.7s';
-});
-
-/*
-slider.addEventListener('transitionend', (event) => {
-  if (currentIndex === sliderItems.length - 1) {
-    slider.style.transition = 'none';
-    currentIndex = 1;
-    slider.style.setProperty('--item-index', currentIndex);
-  }
-  if (currentIndex === 0) {
-    slider.style.transition = 'none';
-    currentIndex = 3;
-    slider.style.setProperty('--item-index', currentIndex);
+    sliderItemsWithCloned[x].classList.add('active');
   }
 });
-*/
+
+function goto(index, isCenter = true) {
+  if (index < 1) {
+    return;
+  }
+
+  if (index > totalItems) {
+    return;
+  }
+
+  slider.classList.add('animating');
+  const centerIndex = isCenter ? 1 : 0;
+  currentIndex = index + showItem - 1 - centerIndex;
+  setIndex(currentIndex);
+  slider.style.transform = `translateX(-${sliderItemWidth * currentIndex}px)`;
+}

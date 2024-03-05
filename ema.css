@@ -5,28 +5,30 @@
   padding: 0;
   box-sizing: border-box;
 }
+
 .container {
   max-width: 400px;
   height: 200px;
   margin: 20px auto;
 }
+
 .slider-wrapper {
-  --item-slide: 2;
+  --slide-item: 2;
   --show-item: 3;
   border: 2px solid red;
   width: 100%;
   height: 100%;
 
-  /* overflow-x: hidden; */
+  overflow-x: hidden;
   position: relative;
 }
 
 .animating {
   transition: 700ms;
+  transition-timing-function: ease;
 }
 
 .clone {
-  color: tomato;
 }
 
 .slider {
@@ -35,7 +37,6 @@
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: calc(100% / var(--show-item));
-  /* transform: translateX(calc(-100% * var(--item-index))); */
   /* transition: 0.7s; */
 
   & li {
@@ -60,6 +61,7 @@
     &.right {
       right: 0;
     }
+
     &.left {
       left: 0;
     }
@@ -81,6 +83,7 @@
       background-color: #333;
       border-radius: 100%;
       cursor: pointer;
+
       &.selected {
         background-color: red;
         transition: 0.3s;
