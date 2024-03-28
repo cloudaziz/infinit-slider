@@ -28,14 +28,14 @@ let currentIndex = 0;
 function setIndex(index) {
   sliderWrapper.style.setProperty('--slide-index', currentIndex);
 }
-
+// 1. adding first clone with showItem wise
 for (let index = 0; index < showItem; index++) {
   const firstClone = sliderItems[index].cloneNode(true);
   firstClone.classList.add('clone');
   firstClone.classList.remove('active');
   slider.append(firstClone);
 }
-
+// 1. adding last clone with showItem wise
 for (let index = 0; index < showItem; index++) {
   const lastClone = sliderItems[lastItemsIndex - index].cloneNode(true);
   lastClone.classList.add('clone');
@@ -43,8 +43,10 @@ for (let index = 0; index < showItem; index++) {
   slider.prepend(lastClone);
 }
 
+// 2. adding slider Items with clone
 const sliderItemsWithCloned = slider.querySelectorAll('li');
 
+// 3. adding move left first clone item
 sliderItemsWithCloned.forEach((item, indx) => {
   if (item.classList.contains('active')) {
     currentIndex = indx;
@@ -53,7 +55,9 @@ sliderItemsWithCloned.forEach((item, indx) => {
   }
 });
 
+// 4. adding current class in current index after moving
 sliderItemsWithCloned[currentIndex].classList.add('current');
+console.log(currentIndex);
 for (let i = 0; i < showItem; i++) {
   const x = i + currentIndex;
 
@@ -89,8 +93,8 @@ nextBtn.addEventListener('click', (event) => {
   if (slider.classList.contains('animating')) {
     return;
   }
-  const next1 = currentIndex + itemsPerSlide; // 3 + 3 = 6
-  const remaining = totalItems - (next1 - itemsPerSlide); // 7 - 6 = 1
+
+  const remaining = totalItems - currentIndex; // 7 - 6 = 1
 
   let s = itemsPerSlide < remaining ? itemsPerSlide : remaining;
 
@@ -99,7 +103,7 @@ nextBtn.addEventListener('click', (event) => {
   }
 
   currentIndex += s;
-  setIndex(currentIndex);
+  // setIndex(currentIndex);
 
   slider.classList.add('animating');
   slider.style.transform = `translateX(-${sliderItemWidth * currentIndex}px)`;
@@ -138,7 +142,7 @@ slider.addEventListener('transitionend', (event) => {
     sliderItemsWithCloned[x].classList.add('active');
   }
 });
-
+/*
 function goto(index, isCenter = true) {
   if (index < 1) {
     return;
@@ -154,3 +158,4 @@ function goto(index, isCenter = true) {
   setIndex(currentIndex);
   slider.style.transform = `translateX(-${sliderItemWidth * currentIndex}px)`;
 }
+*/
